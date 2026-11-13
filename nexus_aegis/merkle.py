@@ -20,7 +20,6 @@ from typing import Any
 
 from nexus_aegis.models import (
     AegisAttestationBundle,
-    GateVerdict,
     MerkleInclusionProof,
     MerkleProofStep,
     canonical_json_bytes,

@@ -173,7 +173,7 @@ def render_pr_attestation_markdown(attestation: AegisAttestationBundle) -> str:
     total_ms = sum(v.elapsed_ms for v in attestation.gate_verdicts)
 
     lines: list[str] = [
-        f"## 🛡️ NexusAegis Proof-Carrying Agent Execution (PCAE) Certificate",
+        "## 🛡️ NexusAegis Proof-Carrying Agent Execution (PCAE) Certificate",
         "",
         f"{badge} — `{status_icon}`",
         "",
