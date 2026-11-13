@@ -270,6 +270,31 @@ Add `nexus-aegis` to your Claude Desktop, Cursor, or Antigravity MCP configurati
 
 ---
 
+## 7b. HTTP/SSE MCP Portal, REST API & Docker Deployment
+
+`nexus-aegis` also ships with a zero-dependency interactive PCAE Portal, Streamable HTTP + SSE MCP gateway (`/mcp`), REST attestation API, Prometheus/JSON telemetry, Vercel ASGI wrapper ([`api/index.py`](api/index.py)), and hardened non-root container image:
+
+```bash
+# Start the interactive portal + Streamable HTTP/SSE MCP server on http://127.0.0.1:8000
+nexus-aegis serve-http --host 127.0.0.1 --port 8000
+
+# Run the live HTTP + MCP smoke test
+python scripts/smoke_test.py
+
+# Build and run the non-root production container
+docker build -t nexus-aegis .
+docker run --rm -p 8000:8000 nexus-aegis
+```
+
+Exposed HTTP endpoints:
+- `GET /` — Interactive NexusAegis PCAE Kernel & Merkle Attestation Portal (`Accept: text/html`) or JSON service manifest
+- `GET` / `HEAD /health`, `/healthz`, `/readyz` — Readiness and liveness probes
+- `GET /metrics` — Prometheus text or JSON telemetry (`?format=json`)
+- `POST /mcp` (Streamable HTTP JSON-RPC 2.0) & `GET /mcp` (SSE or HTTP `405`) — MCP tools, resources, and prompts
+- `GET /api/gates`, `GET|POST /api/demo`, `POST /api/attest`, `POST /api/verify-proof`, `GET|POST /api/benchmark` — REST kernel endpoints
+
+---
+
 ## 8. Documentation & Architecture Decision Records
 
 - [System Architecture & RFC 6962 Merkle Specification](docs/architecture.md)

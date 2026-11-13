@@ -9,7 +9,7 @@ gate proofs, and renders GitHub Pull Request Attestation Markdown Cards.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from nexus_aegis.gates import GATE_METADATA, SevenGatePipeline
@@ -58,7 +58,7 @@ class NexusAegisKernel:
         `AegisAttestationBundle` with RFC 6962 Merkle inclusion proofs for every leaf.
         """
         if timestamp_utc is None:
-            timestamp_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            timestamp_utc = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         verdicts = self.pipeline.evaluate_all(bundle)
         overall_passed = all(v.passed for v in verdicts)
@@ -219,9 +219,11 @@ def render_pr_attestation_markdown(attestation: AegisAttestationBundle) -> str:
         lines.extend(
             [
                 "",
-                "> **Zero-Knowledge / Selective Disclosure Ready:** Any single gate verdict above can be "
-                "independently verified against the RFC 6962 Merkle Root (`O(log N)` = 4 sibling hashes) "
-                "using `nexus-aegis verify-proof` without disclosing proprietary prompts or workspace diffs.",
+                (
+                    "> **Zero-Knowledge / Selective Disclosure Ready:** Any single gate verdict above can be "
+                    "independently verified against the RFC 6962 Merkle Root (`O(log N)` = 4 sibling hashes) "
+                    "using `nexus-aegis verify-proof` without disclosing proprietary prompts or workspace diffs."
+                ),
             ]
         )
 

@@ -9,41 +9,41 @@ Attestation Certificate (`AegisAttestationBundle`) with selective-disclosure
 inclusion proofs and an MCP Server.
 """
 
+from nexus_aegis.benchmark import run_benchmark_suite
+from nexus_aegis.gates import GATE_METADATA, SevenGatePipeline
+from nexus_aegis.kernel import NexusAegisKernel, render_pr_attestation_markdown
+from nexus_aegis.merkle import (
+    MerkleTreeEngine,
+    verify_bundle_integrity,
+    verify_merkle_inclusion_proof,
+)
 from nexus_aegis.models import (
+    AegisAttestationBundle,
     AgentRunBundle,
     GateVerdict,
-    MerkleProofStep,
     MerkleInclusionProof,
-    AegisAttestationBundle,
+    MerkleProofStep,
     canonical_json_bytes,
     sha256_hex,
 )
-from nexus_aegis.merkle import (
-    MerkleTreeEngine,
-    verify_merkle_inclusion_proof,
-    verify_bundle_integrity,
-)
-from nexus_aegis.gates import SevenGatePipeline, GATE_METADATA
-from nexus_aegis.kernel import NexusAegisKernel, render_pr_attestation_markdown
-from nexus_aegis.benchmark import run_benchmark_suite
 
 __version__ = "1.0.0"
 
 __all__ = [
-    "__version__",
+    "GATE_METADATA",
+    "AegisAttestationBundle",
     "AgentRunBundle",
     "GateVerdict",
-    "MerkleProofStep",
     "MerkleInclusionProof",
-    "AegisAttestationBundle",
-    "canonical_json_bytes",
-    "sha256_hex",
+    "MerkleProofStep",
     "MerkleTreeEngine",
-    "verify_merkle_inclusion_proof",
-    "verify_bundle_integrity",
-    "SevenGatePipeline",
-    "GATE_METADATA",
     "NexusAegisKernel",
+    "SevenGatePipeline",
+    "__version__",
+    "canonical_json_bytes",
     "render_pr_attestation_markdown",
     "run_benchmark_suite",
+    "sha256_hex",
+    "verify_bundle_integrity",
+    "verify_merkle_inclusion_proof",
 ]

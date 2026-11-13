@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
-from typing import Sequence
+from collections.abc import Sequence
+from pathlib import Path
 
 from nexus_aegis.benchmark import build_benchmark_scenarios, run_benchmark_suite
 from nexus_aegis.gates import GATE_METADATA
+from nexus_aegis.http_server import DEFAULT_MAX_BODY_BYTES, serve_http
 from nexus_aegis.kernel import NexusAegisKernel, render_pr_attestation_markdown
 from nexus_aegis.mcp_server import NexusAegisMCPServer
 from nexus_aegis.merkle import verify_merkle_inclusion_proof
@@ -74,6 +75,20 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser(
         "mcp",
         help="Start the JSON-RPC 2.0 Stdio MCP server",
+    )
+
+    # serve-http
+    p_http = sub.add_parser(
+        "serve-http",
+        help="Start the HTTP/SSE MCP portal and REST verification server",
+    )
+    p_http.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p_http.add_argument("--port", type=int, default=8000, help="Bind port (default: 8000)")
+    p_http.add_argument(
+        "--max-body-bytes",
+        type=int,
+        default=DEFAULT_MAX_BODY_BYTES,
+        help="Maximum allowed request body size in bytes",
     )
 
     return parser
@@ -220,6 +235,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "mcp":
         server = NexusAegisMCPServer()
         server.serve_stdio()
+        return 0
+    if args.command == "serve-http":
+        serve_http(host=args.host, port=args.port, max_body_bytes=args.max_body_bytes)
         return 0
     return 1
 

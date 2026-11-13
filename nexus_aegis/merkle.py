@@ -200,10 +200,7 @@ def verify_merkle_inclusion_proof(
     if not hmac.compare_digest(current, proof.root_hash):
         return False
 
-    if expected_root_hash is not None and not hmac.compare_digest(current, expected_root_hash):
-        return False
-
-    return True
+    return not (expected_root_hash is not None and not hmac.compare_digest(current, expected_root_hash))
 
 
 def compute_bundle_hmac(

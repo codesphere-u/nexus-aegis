@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import base64
+import binascii
 import fnmatch
 import re
 import time
@@ -23,7 +24,6 @@ from typing import Any
 
 from nexus_aegis.merkle import hash_leaf_verdict
 from nexus_aegis.models import AgentRunBundle, GateVerdict
-
 
 GATE_METADATA: list[dict[str, str]] = [
     {
@@ -244,9 +244,12 @@ class SevenGatePipeline:
             for b64_match in _BASE64_CANDIDATE_RE.findall(text):
                 try:
                     decoded = base64.b64decode(b64_match, validate=True).decode("utf-8", errors="ignore")
-                except Exception:
-                    continue
-                if any(p.search(decoded) for _, p in _INJECTION_PATTERNS) or _DANGEROUS_COMMAND_RE.search(decoded):
+                except (binascii.Error, UnicodeDecodeError, ValueError):
+                    decoded = ""
+                if decoded and (
+                    any(p.search(decoded) for _, p in _INJECTION_PATTERNS)
+                    or _DANGEROUS_COMMAND_RE.search(decoded)
+                ):
                     smuggling_hits += 1
                     violations.append(f"G1:base64_payload_smuggling detected in {source_label}")
 
@@ -538,10 +541,9 @@ class SevenGatePipeline:
                     env_bypasses += 1
                     violations.append("G5:test_harness_env_snooping detected (`PYTEST_CURRENT_TEST`)")
 
-            elif isinstance(node, ast.ExceptHandler):
-                if _is_swallowed_exception_handler(node):
-                    swallowed_exceptions += 1
-                    violations.append("G5:swallowed_exception_handler (`except ...: pass` or constant return)")
+            elif isinstance(node, ast.ExceptHandler) and _is_swallowed_exception_handler(node):
+                swallowed_exceptions += 1
+                violations.append("G5:swallowed_exception_handler (`except ...: pass` or constant return)")
 
         metrics = {
             "patch_present": True,
@@ -743,9 +745,7 @@ def _path_matches_lease(file_path: str, lease_pattern: str) -> bool:
         return True
     if fnmatch.fnmatchcase(norm_file, norm_pat):
         return True
-    if norm_pat.endswith("/**") and norm_file.startswith(norm_pat[:-2]):
-        return True
-    return False
+    return bool(norm_pat.endswith("/**") and norm_file.startswith(norm_pat[:-2]))
 
 
 def _extract_test_functions(tree: ast.AST) -> dict[str, dict[str, int]]:
@@ -760,9 +760,13 @@ def _extract_test_functions(tree: ast.AST) -> dict[str, dict[str, int]]:
 def _is_tautological_assert(test_expr: ast.expr) -> bool:
     if isinstance(test_expr, ast.Constant) and bool(test_expr.value) is True:
         return True
-    if isinstance(test_expr, ast.UnaryOp) and isinstance(test_expr.op, ast.Not):
-        if isinstance(test_expr.operand, ast.Constant) and bool(test_expr.operand.value) is False:
-            return True
+    if (
+        isinstance(test_expr, ast.UnaryOp)
+        and isinstance(test_expr.op, ast.Not)
+        and isinstance(test_expr.operand, ast.Constant)
+        and bool(test_expr.operand.value) is False
+    ):
+        return True
     if isinstance(test_expr, ast.Compare) and len(test_expr.ops) == 1 and isinstance(test_expr.ops[0], ast.Eq):
         left = test_expr.left
         right = test_expr.comparators[0]
