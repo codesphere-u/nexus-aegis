@@ -6,7 +6,6 @@ from fastapi import FastAPI, Request, Response
 
 from nexus_aegis import __version__
 from nexus_aegis.http_server import (
-    DEFAULT_MAX_BODY_BYTES,
     BadRequestError,
     NexusAegisHTTPApp,
     PayloadTooLargeError,
@@ -29,7 +28,7 @@ async def _read_bounded_body(request: Request, max_body_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-def create_fastapi_app(*, max_body_bytes: int = DEFAULT_MAX_BODY_BYTES) -> FastAPI:
+def create_fastapi_app(*, max_body_bytes: int | None = None) -> FastAPI:
     """Build a FastAPI ASGI app backed by NexusAegisHTTPApp."""
     core_app = NexusAegisHTTPApp(max_body_bytes=max_body_bytes)
     fastapi_app = FastAPI(

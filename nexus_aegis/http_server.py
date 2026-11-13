@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 import time
@@ -29,8 +30,26 @@ from nexus_aegis.merkle import verify_merkle_inclusion_proof
 from nexus_aegis.models import AgentRunBundle, MerkleInclusionProof
 
 DEFAULT_MAX_BODY_BYTES = 1_048_576
+_MIN_BODY_BYTES = 256
+_MAX_BODY_BYTES_LIMIT = 16_777_216
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 _VERSION = "1.0.0"
+
+
+def resolve_max_body_bytes(override: int | None = None) -> int:
+    """Resolve max request body size from explicit override or `NEXUS_AEGIS_MAX_BODY_BYTES`."""
+    if override is not None:
+        if override <= 0:
+            raise ValueError("max_body_bytes must be positive")
+        return override
+    raw = os.environ.get("NEXUS_AEGIS_MAX_BODY_BYTES", "").strip()
+    if not raw:
+        return DEFAULT_MAX_BODY_BYTES
+    try:
+        parsed = int(raw)
+    except ValueError:
+        return DEFAULT_MAX_BODY_BYTES
+    return max(_MIN_BODY_BYTES, min(_MAX_BODY_BYTES_LIMIT, parsed))
 
 
 class PayloadTooLargeError(ValueError):
@@ -170,6 +189,9 @@ class MetricsCollector:
         return "\n".join(lines) + "\n"
 
 
+ServerMetrics = MetricsCollector
+
+
 def sanitize_request_id(raw_value: str | None) -> str:
     """Validate and sanitize an incoming X-Request-ID or generate a fresh hex UUID."""
     if raw_value is not None:
@@ -215,7 +237,16 @@ def build_security_headers(
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Expose-Headers": "X-Request-ID, Mcp-Session-Id",
     }
-    if path.startswith("/api/") or path in ("/api", "/mcp", "/messages"):
+    if path.startswith("/api/") or path in (
+        "/api",
+        "/mcp",
+        "/messages",
+        "/health",
+        "/healthz",
+        "/readyz",
+        "/info",
+        "/metrics",
+    ):
         headers["Cache-Control"] = "no-store"
     if extra:
         headers.update(extra)
@@ -514,12 +545,10 @@ class NexusAegisHTTPApp:
     def __init__(
         self,
         *,
-        max_body_bytes: int = DEFAULT_MAX_BODY_BYTES,
+        max_body_bytes: int | None = None,
         secret_key: str = "nexus-aegis-default-signing-key",
     ) -> None:
-        if max_body_bytes <= 0:
-            raise ValueError("max_body_bytes must be positive")
-        self.max_body_bytes = max_body_bytes
+        self.max_body_bytes = resolve_max_body_bytes(max_body_bytes)
         self.kernel = NexusAegisKernel(secret_key=secret_key)
         self.mcp_server = NexusAegisMCPServer(secret_key=secret_key)
         self.metrics = MetricsCollector()
@@ -963,6 +992,33 @@ class NexusAegisHTTPApp:
         if disclose_gate is not None and not isinstance(disclose_gate, str):
             raise BadRequestError("Field 'disclose_gate' must be a string when provided.")
 
+        for field_name in (
+            "retrieved_context",
+            "temporal_facts",
+            "tool_trajectory",
+            "active_peer_leases",
+        ):
+            if field_name in bundle_raw:
+                items = bundle_raw[field_name]
+                if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
+                    raise BadRequestError(f"Field '{field_name}' must be a list of JSON objects.")
+
+        for field_name in ("file_reads", "file_writes"):
+            if field_name in bundle_raw:
+                items = bundle_raw[field_name]
+                if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
+                    raise BadRequestError(f"Field '{field_name}' must be a list of strings.")
+
+        if "workspace_symbols" in bundle_raw:
+            ws = bundle_raw["workspace_symbols"]
+            if not isinstance(ws, dict) or not all(
+                isinstance(k, str) and isinstance(v, list) and all(isinstance(s, str) for s in v)
+                for k, v in ws.items()
+            ):
+                raise BadRequestError(
+                    "Field 'workspace_symbols' must map filenames to lists of symbol strings."
+                )
+
         try:
             bundle = AgentRunBundle.from_dict(bundle_raw)
             attestation = self.kernel.attest(bundle, timestamp_utc=timestamp_utc)
@@ -1187,7 +1243,7 @@ def create_http_server(
     host: str = "127.0.0.1",
     port: int = 8000,
     *,
-    max_body_bytes: int = DEFAULT_MAX_BODY_BYTES,
+    max_body_bytes: int | None = None,
     secret_key: str = "nexus-aegis-default-signing-key",
 ) -> NexusAegisHTTPServer:
     """Instantiate a ready-to-serve NexusAegisHTTPServer without blocking."""
@@ -1199,7 +1255,7 @@ def serve_http(
     host: str = "127.0.0.1",
     port: int = 8000,
     *,
-    max_body_bytes: int = DEFAULT_MAX_BODY_BYTES,
+    max_body_bytes: int | None = None,
     secret_key: str = "nexus-aegis-default-signing-key",
 ) -> None:
     """Start the NexusAegis HTTP/SSE MCP server and block until interrupted."""

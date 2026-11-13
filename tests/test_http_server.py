@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import http.client
+import io
 import json
 import threading
+from pathlib import Path
 from typing import Any
 
+import pytest
+
 from nexus_aegis.benchmark import build_benchmark_scenarios
-from nexus_aegis.http_server import NexusAegisHTTPApp, create_http_server
+from nexus_aegis.cli import build_parser, main
+from nexus_aegis.http_server import NexusAegisHTTPApp, create_http_server, resolve_max_body_bytes
 
 
 def _decode(raw: bytes) -> dict[str, Any]:
@@ -235,8 +240,6 @@ def test_live_tcp_http_server_roundtrip() -> None:
 
 
 def test_mcp_resources_prompts_and_stdio_dispatch() -> None:
-    import io
-
     app = NexusAegisHTTPApp()
     rpc_calls = [
         {"jsonrpc": "2.0", "id": 10, "method": "ping"},
@@ -299,4 +302,167 @@ def test_mcp_resources_prompts_and_stdio_dispatch() -> None:
     assert len(lines) == 2
     assert lines[0]["result"] == {}
     assert lines[1]["error"]["code"] == -32700
+
+
+def test_env_max_body_bytes_security_headers_and_mcp_parse_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("NEXUS_AEGIS_MAX_BODY_BYTES", "512")
+    assert resolve_max_body_bytes() == 512
+
+    app = NexusAegisHTTPApp()
+    assert app.max_body_bytes == 512
+
+    # Security headers across API and health endpoints
+    health = app.handle_http("GET", "/health", {})
+    assert health.headers["X-Content-Type-Options"] == "nosniff"
+    assert health.headers["X-Frame-Options"] == "SAMEORIGIN"
+    assert health.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    assert health.headers["Cache-Control"] == "no-store"
+
+    # Malformed JSON on POST /mcp yields JSON-RPC -32700
+    bad_mcp = app.handle_http("POST", "/mcp", {"Content-Type": "application/json"}, b"{not-json")
+    assert bad_mcp.status == 400
+    assert _decode(bad_mcp.body)["error"]["code"] == -32700
+
+    # Inner malformed list items in AgentRunBundle must return clean 400 without traceback leak
+    malformed_inner = app.handle_http(
+        "POST",
+        "/api/attest",
+        {"Content-Type": "application/json"},
+        json.dumps(
+            {
+                "bundle": {
+                    "run_id": "r-bad-1",
+                    "agent_id": "a-bad-1",
+                    "retrieved_context": ["not-a-dict"],
+                }
+            }
+        ).encode("utf-8"),
+    )
+    assert malformed_inner.status == 400
+    assert "Traceback" not in malformed_inner.body.decode("utf-8")
+
+    # Request larger than NEXUS_AEGIS_MAX_BODY_BYTES=512 is blocked with 413
+    too_big = app.handle_http("POST", "/api/attest", {}, b"x" * 600)
+    assert too_big.status == 413
+
+
+def test_cli_serve_http_parser_and_json_branches(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    parser = build_parser()
+    parsed = parser.parse_args(["serve-http", "--host", "0.0.0.0", "--port", "9090", "--max-body-bytes", "2048"])
+    assert parsed.command == "serve-http"
+    assert parsed.host == "0.0.0.0"
+    assert parsed.port == 9090
+    assert parsed.max_body_bytes == 2048
+
+    assert main(["gates", "--json"]) == 0
+    assert main(["benchmark", "--json"]) == 0
+
+    clean_bundle = json.dumps(build_benchmark_scenarios()[0].bundle.to_dict())
+    monkeypatch.setattr("sys.stdin", io.StringIO(clean_bundle))
+    assert main(["attest", "-", "--markdown"]) == 0
+    assert main(["attest", str(tmp_path / "does-not-exist-nexus-aegis.json")]) == 2
+
+
+def test_fastapi_asgi_entrypoint_integration() -> None:
+    pytest.importorskip("fastapi")
+    httpx = pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    from api.index import create_fastapi_app
+
+    _ = httpx  # ensure httpx is available for FastAPI TestClient
+    client = TestClient(create_fastapi_app(max_body_bytes=65536))
+
+    head_resp = client.head("/health")
+    assert head_resp.status_code == 200
+    assert head_resp.headers["x-frame-options"] == "SAMEORIGIN"
+    assert head_resp.headers["x-content-type-options"] == "nosniff"
+
+    html_resp = client.get("/", headers={"Accept": "text/html"})
+    assert html_resp.status_code == 200
+    assert "NexusAegis" in html_resp.text
+
+    gates_resp = client.get("/api/gates")
+    assert gates_resp.status_code == 200
+    assert gates_resp.json()["total_gates"] == 7
+
+    bundle_dict = build_benchmark_scenarios()[0].bundle.to_dict()
+    attest_resp = client.post(
+        "/api/attest",
+        json={"bundle": bundle_dict, "disclose_gate": "G5_ANTI_REWARD_HACK"},
+    )
+    assert attest_resp.status_code == 200
+    sd = attest_resp.json()["selective_disclosure"]
+
+    verify_resp = client.post("/api/verify-proof", json=sd)
+    assert verify_resp.status_code == 200
+    assert verify_resp.json()["verified"] is True
+
+    mcp_resp = client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}},
+    )
+    assert mcp_resp.status_code == 200
+    assert len(mcp_resp.json()["result"]["tools"]) == 4
+
+    too_big = client.post("/api/attest", content=b"x" * 70000)
+    assert too_big.status_code == 413
+
+
+def test_mcp_validation_edges_and_cli_subcommands(monkeypatch: pytest.MonkeyPatch) -> None:
+    app = NexusAegisHTTPApp()
+    bad_calls = [
+        {"jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": {}},
+        {"jsonrpc": "2.0", "id": 2, "method": "resources/subscribe", "params": {}},
+        {"jsonrpc": "2.0", "id": 3, "method": "prompts/get", "params": {}},
+        {"jsonrpc": "2.0", "id": 4, "method": "prompts/get", "params": {"name": "unknown-prompt"}},
+        {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "prompts/get",
+            "params": {"name": "audit-agent-pr", "arguments": {"run_summary": "   "}},
+        },
+        {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "no_such_tool"}},
+        {
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {"name": "aegis_attest_agent_run", "arguments": {"bundle": "not-dict"}},
+        },
+        {
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "tools/call",
+            "params": {"name": "aegis_verify_merkle_proof", "arguments": {"proof": "not-dict"}},
+        },
+    ]
+    for req in bad_calls:
+        resp = app.mcp_server.handle_request(req)
+        assert resp is not None
+        if req["method"] == "resources/subscribe":
+            assert resp["result"] == {}
+        else:
+            assert "error" in resp
+
+    assert main(["gates"]) == 0
+    assert main(["demo"]) == 0
+    assert main(["benchmark"]) == 0
+
+    called: dict[str, Any] = {}
+
+    def _fake_serve_http(**kwargs: Any) -> None:
+        called.update(kwargs)
+
+    monkeypatch.setattr("nexus_aegis.cli.serve_http", _fake_serve_http)
+    assert main(["serve-http", "--host", "127.0.0.1", "--port", "8765"]) == 0
+    assert called == {"host": "127.0.0.1", "port": 8765, "max_body_bytes": None}
+
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"jsonrpc":"2.0","id":1,"method":"ping"}\n'))
+    monkeypatch.setattr("sys.stdout", io.StringIO())
+    assert main(["mcp"]) == 0
 

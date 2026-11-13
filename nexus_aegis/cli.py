@@ -8,12 +8,14 @@ Supported subcommands:
 - `nexus-aegis gates`              -> Displays all 7 PCAE verification gates and upstream Codesphere stack engines
 - `nexus-aegis benchmark [--json]` -> Runs the 35-scenario multi-agent benchmark suite
 - `nexus-aegis mcp`                -> Starts the JSON-RPC 2.0 Stdio MCP server
+- `nexus-aegis serve-http`         -> Starts the HTTP/SSE MCP portal and REST verification server
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -82,13 +84,25 @@ def build_parser() -> argparse.ArgumentParser:
         "serve-http",
         help="Start the HTTP/SSE MCP portal and REST verification server",
     )
-    p_http.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
-    p_http.add_argument("--port", type=int, default=8000, help="Bind port (default: 8000)")
+    p_http.add_argument(
+        "--host",
+        default=os.environ.get("HOST", "127.0.0.1"),
+        help="Bind host (default: HOST env or 127.0.0.1)",
+    )
+    p_http.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", "8000")),
+        help="Bind port (default: PORT env or 8000)",
+    )
     p_http.add_argument(
         "--max-body-bytes",
         type=int,
-        default=DEFAULT_MAX_BODY_BYTES,
-        help="Maximum allowed request body size in bytes",
+        default=None,
+        help=(
+            "Maximum allowed request body size in bytes "
+            f"(default: NEXUS_AEGIS_MAX_BODY_BYTES or {DEFAULT_MAX_BODY_BYTES})"
+        ),
     )
 
     return parser
@@ -125,9 +139,17 @@ def _cmd_demo() -> int:
 
 
 def _cmd_attest(args: argparse.Namespace) -> int:
-    raw = sys.stdin.read() if args.input_file == "-" else Path(args.input_file).read_text(encoding="utf-8")
-    data = json.loads(raw)
-    bundle = AgentRunBundle.from_dict(data)
+    try:
+        raw = (
+            sys.stdin.read()
+            if args.input_file == "-"
+            else Path(args.input_file).read_text(encoding="utf-8")
+        )
+        data = json.loads(raw)
+        bundle = AgentRunBundle.from_dict(data)
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        print(f"nexus-aegis attest error: {exc}", file=sys.stderr)
+        return 2
     kernel = NexusAegisKernel()
     cert = kernel.attest(bundle)
 

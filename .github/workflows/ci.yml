@@ -25,8 +25,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package and dev tools
-        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - name: Install package, ASGI server, and dev tools
+        run: python -m pip install --upgrade pip && pip install -e ".[dev,server]"
 
       - name: Lint with ruff
         run: ruff check .
@@ -35,7 +35,7 @@ jobs:
         run: mypy nexus_aegis api
 
       - name: Run full test suite with coverage gate
-        run: pytest -v --cov=nexus_aegis --cov-report=term-missing --cov-fail-under=85
+        run: pytest -v --cov=nexus_aegis --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify live HTTP & MCP smoke test
         run: python scripts/smoke_test.py

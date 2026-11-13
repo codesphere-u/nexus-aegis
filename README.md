@@ -262,36 +262,38 @@ Add `nexus-aegis` to your Claude Desktop, Cursor, or Antigravity MCP configurati
 }
 ```
 
-### Exposed MCP Tools
-- `aegis_attest_agent_run`: Runs all 7 PCAE gates on an `AgentRunBundle` and returns the signed `AegisAttestationBundle` + PR Markdown Card.
-- `aegis_verify_merkle_proof`: Verifies an `O(log N)` RFC 6962 `MerkleInclusionProof` against a `merkle_root`.
-- `aegis_list_gates`: Lists all 7 PCAE gates, invariants, and upstream Codesphere repositories.
-- `aegis_run_benchmark`: Executes the 35-scenario multi-agent benchmark suite.
+### Exposed MCP Capabilities
+- **Tools**: `aegis_attest_agent_run`, `aegis_verify_merkle_proof`, `aegis_list_gates`, `aegis_run_benchmark`.
+- **Resources**: `aegis://gates/catalog`, `aegis://gates/{gate_id}`, `aegis://merkle/rfc6962-spec`, `aegis://benchmark/summary`.
+- **Prompts**: `audit-agent-pr`, `verify-selective-disclosure`, `remediate-gate-violation`.
 
 ---
 
 ## 7b. HTTP/SSE MCP Portal, REST API & Docker Deployment
 
-`nexus-aegis` also ships with a zero-dependency interactive PCAE Portal, Streamable HTTP + SSE MCP gateway (`/mcp`), REST attestation API, Prometheus/JSON telemetry, Vercel ASGI wrapper ([`api/index.py`](api/index.py)), and hardened non-root container image:
+`nexus-aegis` also ships with a zero-dependency interactive PCAE Portal, Streamable HTTP + SSE MCP gateway (`/mcp`), REST attestation API, Prometheus/JSON telemetry, Vercel/FastAPI ASGI wrapper ([`api/index.py`](api/index.py) via `[tool.vercel]`), and hardened non-root container image:
 
 ```bash
-# Start the interactive portal + Streamable HTTP/SSE MCP server on http://127.0.0.1:8000
+# Start the zero-dependency interactive portal + Streamable HTTP/SSE MCP server
 nexus-aegis serve-http --host 127.0.0.1 --port 8000
+
+# Or run the optional FastAPI/Uvicorn ASGI gateway (requires pip install -e ".[server]")
+uvicorn api.index:app --host 127.0.0.1 --port 8000
 
 # Run the live HTTP + MCP smoke test
 python scripts/smoke_test.py
 
 # Build and run the non-root production container
 docker build -t nexus-aegis .
-docker run --rm -p 8000:8000 nexus-aegis
+docker run --rm -p 8000:8000 -e NEXUS_AEGIS_MAX_BODY_BYTES=1048576 nexus-aegis
 ```
 
 Exposed HTTP endpoints:
 - `GET /` — Interactive NexusAegis PCAE Kernel & Merkle Attestation Portal (`Accept: text/html`) or JSON service manifest
-- `GET` / `HEAD /health`, `/healthz`, `/readyz` — Readiness and liveness probes
+- `GET` / `HEAD /health`, `/healthz`, `/readyz`, `/info` — Readiness, liveness, and service probes
 - `GET /metrics` — Prometheus text or JSON telemetry (`?format=json`)
-- `POST /mcp` (Streamable HTTP JSON-RPC 2.0) & `GET /mcp` (SSE or HTTP `405`) — MCP tools, resources, and prompts
-- `GET /api/gates`, `GET|POST /api/demo`, `POST /api/attest`, `POST /api/verify-proof`, `GET|POST /api/benchmark` — REST kernel endpoints
+- `POST /mcp` (Streamable HTTP JSON-RPC 2.0), `GET /mcp` (SSE or HTTP `405`), & `POST /messages` — MCP tools, resources, and prompts
+- `GET /api/gates`, `GET|POST /api/demo`, `POST /api/attest`, `POST /api/verify-proof`, `GET|POST /api/benchmark` — REST kernel endpoints (hardened with `X-Request-ID`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Cache-Control: no-store`, and `NEXUS_AEGIS_MAX_BODY_BYTES` `413` body guard)
 
 ---
 
