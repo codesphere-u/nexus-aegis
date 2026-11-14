@@ -484,7 +484,7 @@ def test_run_benchmark_suite_summary_metrics() -> None:
 def test_cli_demo_and_gates_and_benchmark(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli_main(["demo"]) == 0
     out_demo = capsys.readouterr().out
-    assert "NEXUS-AEGIS v1.0.0" in out_demo
+    assert "NEXUS-AEGIS v1.1.0" in out_demo
 
     assert cli_main(["gates", "--json"]) == 0
     out_gates = json.loads(capsys.readouterr().out)

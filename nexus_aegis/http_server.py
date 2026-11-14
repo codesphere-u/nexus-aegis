@@ -33,7 +33,7 @@ DEFAULT_MAX_BODY_BYTES = 1_048_576
 _MIN_BODY_BYTES = 256
 _MAX_BODY_BYTES_LIMIT = 16_777_216
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
-_VERSION = "1.0.0"
+_VERSION = "1.1.0"
 
 
 def resolve_max_body_bytes(override: int | None = None) -> int:

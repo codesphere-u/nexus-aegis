@@ -7,8 +7,8 @@ authors:
     affiliation: "Codesphere Innovations (U) Limited"
 title: "Nexus Aegis"
 abstract: "Kernel-Enforced Capability Sandbox and Runtime Firewall for Autonomous LLM Agents"
-version: "1.0.0"
-date-released: 2026-11-10
+version: "1.1.0"
+date-released: 2026-11-14
 url: "https://github.com/codesphere-u/nexus-aegis"
 repository-code: "https://github.com/codesphere-u/nexus-aegis"
 license: "MIT"

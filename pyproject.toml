@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nexus-aegis"
-version = "1.0.0"
+version = "1.1.0"
 description = "Proof-Carrying Autonomous Agent Kernel & Cryptographic PR Attestation Engine (RFC 6962 Merkle Proofs + 7-Gate PCAE Pipeline + MCP Server)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,6 +37,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://codesphere-u.github.io/nexus-aegis/"
+Documentation = "https://codesphere-u.github.io/nexus-aegis/docs.html"
+Repository = "https://github.com/codesphere-u/nexus-aegis"
+Issues = "https://github.com/codesphere-u/nexus-aegis/issues"
 
 [project.optional-dependencies]
 server = [

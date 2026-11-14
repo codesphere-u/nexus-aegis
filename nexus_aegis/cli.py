@@ -118,7 +118,7 @@ def _cmd_demo() -> int:
     hack_cert = kernel.attest(hack_sc.bundle, timestamp_utc="2026-11-07T12:00:00Z")
 
     print("=" * 84)
-    print("NEXUS-AEGIS v1.0.0 — PROOF-CARRYING AGENT EXECUTION (PCAE) LIVE DEMO")
+    print("NEXUS-AEGIS v1.1.0 — PROOF-CARRYING AGENT EXECUTION (PCAE) LIVE DEMO")
     print("=" * 84)
     print("\n[1] COMPLIANT AUTONOMOUS PULL REQUEST ATTESTATION:")
     print(render_pr_attestation_markdown(clean_cert))
@@ -223,7 +223,7 @@ def _cmd_benchmark(as_json: bool) -> int:
         return 0
 
     print("=" * 84)
-    print("NEXUS-AEGIS v1.0.0 — 35-SCENARIO MULTI-AGENT BENCHMARK REPORT")
+    print("NEXUS-AEGIS v1.1.0 — 35-SCENARIO MULTI-AGENT BENCHMARK REPORT")
     print("=" * 84)
     print(f"Total Scenarios Evaluated         : {report['total_scenarios']} (10 Clean + 25 Adversarial)")
     print(f"Adversarial Detection Recall      : {report['adversarial_recall_pct']:.2f}% ({report['true_positives']}/{report['adversarial_scenarios']})")

@@ -4,9 +4,14 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/runtime_dependencies-0-brightgreen.svg)](pyproject.toml)
-[![MCP Server](https://img.shields.io/badge/MCP-JSON--RPC%202.0-purple.svg)](nexus_aegis/mcp_server.py)
+[![MCP Server](https://img.shields.io/badge/MCP-JSON--RPC%202.0-2dd4bf.svg)](nexus_aegis/mcp_server.py)
+[![Website](https://img.shields.io/badge/Website-Live%20PCAE%20Studio-a78bfa.svg)](https://codesphere-u.github.io/nexus-aegis/)
 
-**Proof-Carrying Autonomous Agent Kernel & Cryptographic Pull Request Attestation Engine (`v1.0.0`, with MCP Server)**
+**Proof-Carrying Autonomous Agent Kernel & Cryptographic Pull Request Attestation Engine (`v1.1.0`, with MCP Server)**
+
+> **Live Website & Browser Studio:** [codesphere-u.github.io/nexus-aegis](https://codesphere-u.github.io/nexus-aegis/) · [PCAE & Merkle Studio](https://codesphere-u.github.io/nexus-aegis/studio.html) · [Benchmark](https://codesphere-u.github.io/nexus-aegis/proof.html) · [7-Gate Matrix](https://codesphere-u.github.io/nexus-aegis/rules.html) · [Docs](https://codesphere-u.github.io/nexus-aegis/docs.html)
+>
+> **Guides:** [Getting Started](docs/GETTING_STARTED.md) · [MCP & Attestation](docs/MCP_AND_ATTESTATION.md) · [Architecture](docs/architecture.md) · [llms.txt](llms.txt)
 
 ---
 

@@ -705,7 +705,7 @@ def run_benchmark_suite() -> dict[str, Any]:
     tamper_rejection_pct = round(100.0 * tamper_rejections / max(1, selective_disclosure_total), 2)
 
     return {
-        "benchmark_version": "1.0.0",
+        "benchmark_version": "1.1.0",
         "total_scenarios": len(scenarios),
         "clean_scenarios": total_clean,
         "adversarial_scenarios": total_adversarial,

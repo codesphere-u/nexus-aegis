@@ -1,0 +1,17 @@
+# NexusAegis v1.1.0
+
+> Proof-Carrying Autonomous Agent Kernel & Cryptographic PR Attestation Engine (RFC 6962 Merkle Proofs + 7-Gate PCAE Pipeline + MCP Server). Zero runtime dependencies on Python 3.11+.
+
+## Live Site & Key Pages
+- Home: https://codesphere-u.github.io/nexus-aegis/
+- Interactive Studio (7-Gate PCAE & Selective Disclosure): https://codesphere-u.github.io/nexus-aegis/studio.html
+- Reproducible 35-Scenario Benchmark & Proof: https://codesphere-u.github.io/nexus-aegis/proof.html
+- 7-Gate PCAE, RFC 6962 & MCP Matrix: https://codesphere-u.github.io/nexus-aegis/rules.html
+- Documentation (CLI, Python Kernel, MCP, HTTP Portal): https://codesphere-u.github.io/nexus-aegis/docs.html
+- Source Code & Releases: https://github.com/codesphere-u/nexus-aegis
+
+## Core Capabilities
+- `SevenGatePipeline`: G1 Security (`AgentShield`), G2 Budget (`SynapseRouter`), G3 Swarm Leases (`SwarmWeaver`), G4 Trajectory Health (`AgentFlight`), G5 Anti-Reward-Hack (`PatchPilot`), G6 Truth Grounding (`TruthGate`), G7 Temporal Memory (`Cortex-MCP`).
+- `MerkleTreeEngine`: RFC 6962 SHA-256 tree using `0x00` leaf domain separation and `0x01` internal node prefixes.
+- `verify_merkle_inclusion_proof`: O(log N) selective-disclosure proof verifier checking 4 sibling hashes without revealing prompts or source code diffs.
+- Verified v1.1.0 Benchmark: `100.00%` adversarial recall (`25/25`), `0.00%` clean FPR (`0/10`), `100.00%` selective-disclosure verify (`245/245`), `0.2542 ms` P50 latency.

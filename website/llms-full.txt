@@ -1,0 +1,31 @@
+# NexusAegis v1.1.0 — Full Technical Reference for AI Agents
+
+Repository: https://github.com/codesphere-u/nexus-aegis
+Website: https://codesphere-u.github.io/nexus-aegis/
+Author: Akandwanaho Ivan Alvin (CodeSphere Innovations (U) Limited)
+License: MIT
+
+## Overview
+NexusAegis executes the Proof-Carrying Agent Execution (PCAE) architecture across pure Python 3.11+ with zero external runtime dependencies.
+
+### 7 Deterministic Verification Gates
+1. `G1_SECURITY` (`agentshield`): Blocks prompt injection overrides, zero-width/Base64 smuggling, SSRF (`169.254.169.254`), and `.env`/`.ssh` exfiltration.
+2. `G2_BUDGET_ROUTING` (`synapse-router`): Enforces `cost_usd <= budget_cap_usd`, 120,000 token cap, and detects frontier-model waste.
+3. `G3_SWARM_LEASES` (`swarmweaver`): Detects `exclusive_write` and `shared_read` glob collisions across concurrent subagents.
+4. `G4_TRAJECTORY_HEALTH` (`agentflight`): Blocks `A <-> B` oscillation loops, repeated tool errors, and invalid MCP schemas.
+5. `G5_ANTI_REWARD_HACK` (`patchpilot`): Dual-tree Python AST diff check blocking deleted unit tests, weakened assertions, `assert True`, `@pytest.mark.skip`, `PYTEST_CURRENT_TEST` snooping, and bare `except: pass`.
+6. `G6_TRUTH_GROUNDING` (`truthgate`): Blocks phantom citations (`[doc_99]`), negation/antonym flips, numeric drift, and missing workspace AST symbols.
+7. `G7_TEMPORAL_MEMORY` (`cortex-mcp`): Rejects claims relying on expired (`valid_until != None`) or superseded (`superseded_by != None`) facts.
+
+### RFC 6962 Domain-Separated Merkle Tree & Selective Disclosure
+- Leaf digest: `SHA-256(0x00 || canonical_json(value))` across 9 ordered leaves (`INPUT_DIGEST`, `G1..G7`, `OUTPUT_DIGEST`).
+- Internal node: `SHA-256(0x01 || left_bytes || right_bytes)`.
+- `extract_selective_disclosure_proof(bundle, gate_id)` produces an `O(log N)` proof (4 sibling hashes) verifiable offline by external auditors without exposing prompts or private diffs.
+
+### Verified v1.1.0 Benchmark (`nexus-aegis benchmark`)
+- Scenarios: 35 (`10` clean + `25` adversarial)
+- Adversarial Recall: `100.00%` (`25/25`)
+- Clean False-Positive Rate: `0.00%` (`0/10`)
+- Selective-Disclosure Proof Verify: `100.00%` (`245` proofs)
+- Tampered Proof Rejection Rate: `100.00%` (`245` 1-bit mutations)
+- P50 / P95 Latency: `0.2542 ms` / `0.5229 ms`

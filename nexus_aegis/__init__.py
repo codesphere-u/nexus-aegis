@@ -1,5 +1,5 @@
 """
-NexusAegis (`nexus-aegis`) v1.0.0
+NexusAegis (`nexus-aegis`) v1.1.0
 Proof-Carrying Autonomous Agent Kernel & Cryptographic PR Attestation Engine.
 
 Unifies the 7 deterministic safety, routing, concurrency, trajectory,
@@ -27,7 +27,7 @@ from nexus_aegis.models import (
     sha256_hex,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "GATE_METADATA",

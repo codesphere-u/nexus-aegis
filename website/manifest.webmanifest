@@ -1,0 +1,16 @@
+{
+  "name": "NexusAegis — Proof-Carrying Autonomous Agent Kernel",
+  "short_name": "NexusAegis",
+  "description": "7-gate PCAE pipeline, RFC 6962 domain-separated Merkle proofs, selective-disclosure PR cards, and MCP server.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#fffdf2",
+  "theme_color": "#a78bfa",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

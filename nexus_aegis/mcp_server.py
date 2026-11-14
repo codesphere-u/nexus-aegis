@@ -23,7 +23,7 @@ from nexus_aegis.models import AgentRunBundle, MerkleInclusionProof
 
 MCP_PROTOCOL_VERSION = "2024-11-05"
 SERVER_NAME = "nexus-aegis-mcp"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600

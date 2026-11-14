@@ -2,6 +2,16 @@
 
 All notable changes to `nexus-aegis` will be documented in this file.
 
+## [1.1.0] - 2026-11-14
+
+### Added
+- **Interactive Editorial Website & Browser PCAE Studio (`website/`)**: Royal Violet & Teal-Mint Handy-inspired multi-page website (`index.html`, `studio.html`, `proof.html`, `rules.html`, `docs.html`) featuring a browser 7-Gate PCAE & RFC 6962 Merkle Tree simulator, selective-disclosure verifier, and MCP/CI snippet generator.
+- **GEO / Search Discovery & Launch Playbooks**: `llms.txt`, `llms-full.txt`, `robots.txt`, `sitemap.xml`, `manifest.webmanifest`, Schema.org `@graph` JSON-LD, `website/marketing/LAUNCH_PLAYBOOK.md`, and `website/marketing/PROGRAMMATIC_SEO.md`.
+- **Production Documentation & Pages Deployment**: Added `docs/GETTING_STARTED.md`, `docs/MCP_AND_ATTESTATION.md`, `.github/workflows/pages.yml`, and automated website/SEO/documentation regression tests (`tests/test_website_and_docs.py`).
+
+### Fixed
+- **Strict Type Safety**: Normalized socket address host decoding in `scripts/smoke_test.py` so `mypy nexus_aegis api scripts` passes with zero errors.
+
 ## [1.0.0] - 2026-11-07
 
 ### Added

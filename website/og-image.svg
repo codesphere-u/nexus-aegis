@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#fffdf2"/>
+  <rect x="40" y="40" width="1120" height="550" rx="28" fill="#fbf8eb" stroke="#1e1b18" stroke-width="3"/>
+  <g transform="translate(96, 132)">
+    <path d="M130 8L244 50v94c0 68-48 124-114 144C64 268 16 212 16 144V50L130 8Z" fill="#a78bfa" stroke="#1e1b18" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M130 74L84 128m46-54l46 54m-92 0l-24 54m24-54l24 54m68-54l-24 54m24-54l24 54" stroke="#1e1b18" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="130" cy="74" r="22" fill="#fffdf2" stroke="#1e1b18" stroke-width="6"/>
+    <circle cx="84" cy="128" r="18" fill="#2dd4bf" stroke="#1e1b18" stroke-width="6"/>
+    <circle cx="176" cy="128" r="18" fill="#2dd4bf" stroke="#1e1b18" stroke-width="6"/>
+  </g>
+  <text x="415" y="218" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="68" font-weight="800" fill="#1e1b18">NexusAegis</text>
+  <text x="415" y="274" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="30" font-weight="600" fill="#4e463e">Proof-Carrying Agent Kernel &amp; RFC 6962 Attestation</text>
+  <rect x="415" y="320" width="215" height="56" rx="12" fill="#a78bfa" stroke="#1e1b18" stroke-width="2.5"/>
+  <text x="438" y="357" font-family="ui-monospace, Menlo, monospace" font-size="24" font-weight="700" fill="#2e1065">7 Gates / 0.25 ms</text>
+  <rect x="650" y="320" width="230" height="56" rx="12" fill="#ccfbf1" stroke="#1e1b18" stroke-width="2.5"/>
+  <text x="673" y="357" font-family="ui-monospace, Menlo, monospace" font-size="24" font-weight="700" fill="#134e4a">RFC 6962 Proofs</text>
+  <rect x="900" y="320" width="210" height="56" rx="12" fill="#fffdf2" stroke="#1e1b18" stroke-width="2.5"/>
+  <text x="920" y="357" font-family="ui-monospace, Menlo, monospace" font-size="24" font-weight="700" fill="#1e1b18">100% Recall</text>
+  <text x="415" y="458" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="#6b6258">v1.1.0 • G1 Security -> G7 Temporal • O(log N) Selective Disclosure</text>
+</svg>
